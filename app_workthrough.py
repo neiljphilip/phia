@@ -1,6 +1,4 @@
 import csv
-import os
-from os import name
 
 from bson import ObjectId
 from bson.errors import InvalidId
@@ -21,7 +19,7 @@ class Product:
     name: str
     price: float
 
-    def __init__(self, name, price, brand, category):
+    def __init__(self, name, price, brand, category=None):
         self.name = name
         self.price = price
         self.brand = brand
@@ -35,8 +33,9 @@ class Product:
             "category": self.category,
         }
 
+    @staticmethod
     def from_dict(data):
-        return Product(data["name"], data["price"], data["brand"], data["category"])
+        return Product(data["name"], data["price"], data["brand"], data.get("category"))
 
 
 def parse_csv(filepath):
@@ -52,6 +51,7 @@ def parse_csv(filepath):
                 "name": row["name"],
                 "brand": row["brand"],
                 "num": int(row["num"]),
+                "category": row.get("category", ""),
             }
             products.append(product)
 
@@ -70,14 +70,14 @@ def index() -> str:
 
 # Health Check
 @app.route("/health", methods=["GET"])
-def health() -> None:
+def health():
     return jsonify({"status": "ok", "db": "connected"})
 
 
 @app.route("/products", methods=["POST"])
 def create_product() -> tuple:
     data = request.get_json()
-    if not data["name"] or not data["price"]:
+    if not data.get("name") or not data.get("price"):
         abort(400, "Missing name or price")
     product = catalog.insert_one(data)
     doc = catalog.find_one({"_id": product.inserted_id})
@@ -88,14 +88,13 @@ def create_product() -> tuple:
 
 
 @app.route("/products/<product_id>", methods=["GET"])
-def get_product(product_id) -> None:
+def get_product(product_id):
     try:
         product = catalog.find_one({"_id": ObjectId(product_id)})
-        product["_id"] = str(product["_id"])
-        if product:
-            return jsonify(product), 200
-        else:
+        if not product:
             abort(404)
+        product["_id"] = str(product["_id"])
+        return jsonify(product), 200
     except InvalidId:
         abort(400)
 
@@ -103,7 +102,7 @@ def get_product(product_id) -> None:
 @app.route("/products/<product_id>", methods=["PUT"])
 def update_product(product_id):
     data = request.get_json()
-    if not data["name"] or not data["price"]:
+    if not data.get("name") or not data.get("price"):
         abort(400, "Missing name or price")
     try:
         product = catalog.update_one({"_id": ObjectId(product_id)}, {"$set": data})
@@ -175,6 +174,8 @@ def not_found(e):
 
 
 if __name__ == "__main__":
+    if catalog.count_documents({}) == 0:
+        parse_csv("data.csv")
     print("🚀 http://localhost:8000 | http://127.0.0.1:8000")
-    print("💾 MongoDB: localhost:27017/phia_interview")
+    print("💾 MongoDB: localhost:27017/phia_catalog")
     app.run(debug=True, port=8000, host="0.0.0.0")
