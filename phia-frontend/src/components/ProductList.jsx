@@ -1,0 +1,27 @@
+export default function ProductList({ products, onDelete }) {
+  if (!products?.length) {
+    return <div className="empty">No products match your filters</div>
+  }
+
+  return (
+    <div className="product-grid">
+      {products.map((product) => (
+        <div key={product._id} className="product-card">
+          <h4>{product.name}</h4>
+          <div className="product-meta">
+            <span>Brand: {product.brand}</span>
+            <span>Category: {product.category}</span>
+            <span>${product.price}</span>
+            {product.image && <img src={product.image} alt={product.name} />}
+          </div>
+          <button
+            onClick={() => onDelete(product._id)}
+            className="delete-btn"
+          >
+            Delete
+          </button>
+        </div>
+      ))}
+    </div>
+  )
+}
