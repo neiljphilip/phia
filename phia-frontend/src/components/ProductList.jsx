@@ -9,9 +9,9 @@ export default function ProductList({ products, onDelete }) {
         <div key={product._id} className="product-card">
           <h4>{product.name}</h4>
           <div className="product-meta">
-            <span>Brand: {product.brand}</span>
-            <span>Category: {product.category}</span>
-            <span>${product.price}</span>
+            <div>Brand: {product.brand}</div>
+            {product.category && <div>Category: {product.category}</div>}
+            <div>Price: ${product.price}</div>
             {product.image && <img src={product.image} alt={product.name} />}
           </div>
           <button
