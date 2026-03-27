@@ -80,7 +80,7 @@ export default function App() {
 
   return (
     <div className="app">
-      <h1>Phia Product Catalog</h1>
+      <h1>Phia</h1>
 
       <div className="app-layout">
         <aside className="sidebar">
